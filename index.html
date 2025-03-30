@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Votá el Mejor Nombre</title>
+  <style>
+    body {
+      font-family: sans-serif;
+      text-align: center;
+      margin: 60px auto;
+      max-width: 600px;
+      background: #eee;
+    }
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 40px;
+    }
+    form {
+      display: inline;
+    }
+    button {
+      padding: 20px 40px;
+      margin: 20px;
+      font-size: 1.5rem;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background-color: #333;
+      color: white;
+      transition: background-color 0.3s;
+    }
+    button:hover {
+      background-color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>¿Qué nombre te gusta más?</h1>
+
+  <form id="form1" method="POST" target="hidden_iframe">
+    <input type="hidden" name="name" id="name1">
+    <button type="submit" id="option1"></button>
+  </form>
+
+  <form id="form2" method="POST" target="hidden_iframe">
+    <input type="hidden" name="name" id="name2">
+    <button type="submit" id="option2"></button>
+  </form>
+
+  <iframe name="hidden_iframe" style="display:none;"></iframe>
+
+  <script>
+    const names = [
+      "Óxido", "Prensatto", "Extracto", "Bambino", "Rabioso",
+      "Adán y Evo", "Vizio", "Pecado", "Fiero", "Guapo",
+      "Lungo", "Fango", "Pícaro", "Virgo", "Pichuso",
+      "Preto", "Prieto", "Carozo", "Laminar", "Nativo",
+      "Adagio", "Zeta", "Lento", "Gota", "Tronco", "Tempo"
+    ];
+
+    const endpoint = "https://script.google.com/macros/s/AKfycbwt5FIPEI6Lp9q0OCvElDnuO4Jdqd1WALuASuz3xXg3uApSzT8Z-H5FR_qt-A6ppZ2S/exec";
+
+    // Cambiar la acción de los formularios al endpoint
+    document.getElementById("form1").action = endpoint;
+    document.getElementById("form2").action = endpoint;
+
+    function getRandomPair() {
+      let a = Math.floor(Math.random() * names.length);
+      let b;
+      do {
+        b = Math.floor(Math.random() * names.length);
+      } while (a === b);
+      return [names[a], names[b]];
+    }
+
+    function updateButtons() {
+      const [name1, name2] = getRandomPair();
+      document.getElementById("option1").textContent = name1;
+      document.getElementById("option2").textContent = name2;
+      document.getElementById("name1").value = name1;
+      document.getElementById("name2").value = name2;
+    }
+
+    // Cada vez que se envía un formulario, actualizamos la pantalla
+    document.getElementById("form1").onsubmit = () => setTimeout(updateButtons, 500);
+    document.getElementById("form2").onsubmit = () => setTimeout(updateButtons, 500);
+
+    updateButtons();
+  </script>
+</body>
+</html>
