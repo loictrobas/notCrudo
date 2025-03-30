@@ -57,13 +57,9 @@
       "Preto", "Prieto", "Carozo", "Laminar", "Nativo",
       "Adagio", "Zeta", "Lento", "Gota", "Tronco", "Tempo"
     ];
-
+  
     const endpoint = "https://script.google.com/macros/s/AKfycbwt5FIPEI6Lp9q0OCvElDnuO4Jdqd1WALuASuz3xXg3uApSzT8Z-H5FR_qt-A6ppZ2S/exec";
-
-    // Cambiar la acción de los formularios al endpoint
-    document.getElementById("form1").action = endpoint;
-    document.getElementById("form2").action = endpoint;
-
+  
     function getRandomPair() {
       let a = Math.floor(Math.random() * names.length);
       let b;
@@ -72,20 +68,40 @@
       } while (a === b);
       return [names[a], names[b]];
     }
-
+  
     function updateButtons() {
       const [name1, name2] = getRandomPair();
-      document.getElementById("option1").textContent = name1;
-      document.getElementById("option2").textContent = name2;
-      document.getElementById("name1").value = name1;
-      document.getElementById("name2").value = name2;
+      const btn1 = document.getElementById("option1");
+      const btn2 = document.getElementById("option2");
+  
+      btn1.textContent = name1;
+      btn2.textContent = name2;
+  
+      btn1.onclick = () => sendVote(name1);
+      btn2.onclick = () => sendVote(name2);
     }
-
-    // Cada vez que se envía un formulario, actualizamos la pantalla
-    document.getElementById("form1").onsubmit = () => setTimeout(updateButtons, 500);
-    document.getElementById("form2").onsubmit = () => setTimeout(updateButtons, 500);
-
+  
+    function sendVote(name) {
+      console.log("Enviando voto por:", name);
+      fetch(endpoint, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: name }),
+        credentials: "include" // <-- esto permite enviar cookies de Google
+      })
+      .then((res) => {
+        if (!res.ok) throw new Error("Respuesta no OK");
+        return res.text();
+      })
+      .then((text) => {
+        console.log("Respuesta del script:", text);
+        updateButtons();
+      })
+      .catch((err) => {
+        alert("Hubo un error al votar 😢");
+        console.error(err);
+      });
+    }
+  
     updateButtons();
   </script>
-</body>
-</html>
