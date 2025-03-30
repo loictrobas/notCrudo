@@ -2,18 +2,18 @@
 <html>
 <head>
   <meta charset="UTF-8">
-  <title>Batalla de Nombres</title>
+  <title>Ayudanos a elegir el nombre 🫒</title>
   <style>
     body {
       font-family: sans-serif;
       text-align: center;
       margin: 60px auto;
       max-width: 600px;
-      background: #eee;
+      background: #f5f5f5;
     }
     h1 {
       font-size: 2rem;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     p {
       font-size: 1.1rem;
@@ -21,9 +21,9 @@
       color: #444;
     }
     button {
-      padding: 15px 30px;
-      margin: 10px;
-      font-size: 1.2rem;
+      padding: 20px 40px;
+      margin: 20px;
+      font-size: 1.5rem;
       cursor: pointer;
       border: none;
       border-radius: 8px;
@@ -34,33 +34,22 @@
     button:hover {
       background-color: #555;
     }
-    ul {
-      text-align: left;
-      margin-top: 20px;
-      padding-left: 0;
-      list-style: none;
-    }
-    li {
-      margin: 5px 0;
-    }
   </style>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 </head>
 <body>
-  <h1>Batalla de Nombres 🥊</h1>
-  <p>Vas a ver dos nombres enfrentados. Elegí cuál te gusta más. El perdedor queda eliminado. El proceso continúa hasta que quede un solo nombre... y ese será tu favorito 🏆</p>
+  <h1>Ayudanos a elegir el mejor nombre 🫒</h1>
+  <p>Estamos eligiendo el nombre para nuestra nueva marca de aceite de oliva. Estos son algunos de los nombres en carrera — votá cuál te gusta más. ¡Gracias por tu ayuda! 🙏</p>
 
   <button id="option1"></button>
   <button id="option2"></button>
-
-  <div id="resultado" style="display:none;"></div>
 
   <script>
     const names = [
       "Óxido", "Pecado", "Guapo", "Pícaro", "Virgo", "Vizio", "Adán y Evoo",
       "Satin", "Ingrato", "Maldito", "Ambar", "Capricho", "Cautivo",
-      "Desliz", "Goce", "Chorro", "Bendíto"
+      "Desliz", "Goce", "Chorro"
     ];
 
     const firebaseConfig = {
@@ -76,73 +65,44 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    let round = shuffleArray([...names]);
-
-    function shuffleArray(array) {
-      for (let i = array.length - 1; i > 0; i--) {
-        const j = Math.floor(Math.random() * (i + 1));
-        [array[i], array[j]] = [array[j], array[i]];
-      }
-      return array;
+    function getRandomPair() {
+      let a = Math.floor(Math.random() * names.length);
+      let b;
+      do {
+        b = Math.floor(Math.random() * names.length);
+      } while (a === b);
+      return [names[a], names[b]];
     }
 
-    function showNextPair() {
-      if (round.length === 1) {
-        const winner = round[0];
-        db.collection("votos").doc(winner).get().then(doc => {
-          if (doc.exists) {
-            db.collection("votos").doc(winner).update({ total: doc.data().total + 1 });
-          } else {
-            db.collection("votos").doc(winner).set({ total: 1 });
-          }
-        });
-
-        document.querySelector("h1").textContent = `🏆 Tu nombre ganador: ${winner}`;
-        document.querySelector("p").style.display = "none";
-        document.getElementById("option1").style.display = "none";
-        document.getElementById("option2").style.display = "none";
-
-        const resultado = document.getElementById("resultado");
-        resultado.style.display = "block";
-        resultado.innerHTML = "<p>Cargando ranking...</p>";
-
-        db.collection("votos").orderBy("total", "desc").get().then(snapshot => {
-          let html = "<h2>Ranking global:</h2><ul>";
-          snapshot.forEach(doc => {
-            html += `<li><strong>${doc.id}</strong>: ${doc.data().total} voto(s)</li>`;
-          });
-          html += "</ul><button onclick='reiniciar()'>Volver a jugar</button>";
-          resultado.innerHTML = html;
-        });
-
-        return;
-      }
-
+    function updateButtons() {
+      const [name1, name2] = getRandomPair();
       const btn1 = document.getElementById("option1");
       const btn2 = document.getElementById("option2");
-      btn1.textContent = round[0];
-      btn2.textContent = round[1];
 
-      btn1.onclick = () => vote(round[0], round[1]);
-      btn2.onclick = () => vote(round[1], round[0]);
+      btn1.textContent = name1;
+      btn2.textContent = name2;
+
+      btn1.onclick = () => vote(name1);
+      btn2.onclick = () => vote(name2);
     }
 
-    function vote(winner, loser) {
-      round = round.filter(name => name !== loser);
-      showNextPair();
+    function vote(name) {
+      const ref = db.collection("votos").doc(name);
+      ref.get().then(doc => {
+        if (doc.exists) {
+          ref.update({ total: doc.data().total + 1 });
+        } else {
+          ref.set({ total: 1 });
+        }
+      }).then(() => {
+        updateButtons();
+      }).catch((error) => {
+        alert("Error al guardar el voto 😢");
+        console.error("Error al votar:", error);
+      });
     }
 
-    function reiniciar() {
-      round = shuffleArray([...names]);
-      document.querySelector("h1").textContent = "Batalla de Nombres 🥊";
-      document.querySelector("p").style.display = "block";
-      document.getElementById("option1").style.display = "inline-block";
-      document.getElementById("option2").style.display = "inline-block";
-      document.getElementById("resultado").style.display = "none";
-      showNextPair();
-    }
-
-    showNextPair();
+    updateButtons();
   </script>
 </body>
 </html>
