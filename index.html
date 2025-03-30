@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -15,9 +16,6 @@
       font-size: 2rem;
       margin-bottom: 40px;
     }
-    form {
-      display: inline;
-    }
     button {
       padding: 20px 40px;
       margin: 20px;
@@ -33,21 +31,14 @@
       background-color: #555;
     }
   </style>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
 </head>
 <body>
   <h1>¿Qué nombre te gusta más?</h1>
-
-  <form id="form1" method="POST" target="hidden_iframe">
-    <input type="hidden" name="name" id="name1">
-    <button type="submit" id="option1"></button>
-  </form>
-
-  <form id="form2" method="POST" target="hidden_iframe">
-    <input type="hidden" name="name" id="name2">
-    <button type="submit" id="option2"></button>
-  </form>
-
-  <iframe name="hidden_iframe" style="display:none;"></iframe>
+  <button id="option1"></button>
+  <button id="option2"></button>
 
   <script>
     const names = [
@@ -57,9 +48,22 @@
       "Preto", "Prieto", "Carozo", "Laminar", "Nativo",
       "Adagio", "Zeta", "Lento", "Gota", "Tronco", "Tempo"
     ];
-  
-    const endpoint = "https://script.google.com/macros/s/AKfycbwt5FIPEI6Lp9q0OCvElDnuO4Jdqd1WALuASuz3xXg3uApSzT8Z-H5FR_qt-A6ppZ2S/exec";
-  
+
+    // Configuración de Firebase
+    const firebaseConfig = {
+      apiKey: "AIzaSyCiexyUYac9E8UMcIm4aLTw9IMuEO3ukxE",
+      authDomain: "notcrudo.firebaseapp.com",
+      projectId: "notcrudo",
+      storageBucket: "notcrudo.firebasestorage.app",
+      messagingSenderId: "59156363110",
+      appId: "1:59156363110:web:0ea9b6f22815d09d857aa7",
+      measurementId: "G-F5MZ01HF1R"
+    };
+
+    // Inicializar Firebase
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.firestore();
+
     function getRandomPair() {
       let a = Math.floor(Math.random() * names.length);
       let b;
@@ -68,40 +72,36 @@
       } while (a === b);
       return [names[a], names[b]];
     }
-  
+
     function updateButtons() {
       const [name1, name2] = getRandomPair();
       const btn1 = document.getElementById("option1");
       const btn2 = document.getElementById("option2");
-  
+
       btn1.textContent = name1;
       btn2.textContent = name2;
-  
-      btn1.onclick = () => sendVote(name1);
-      btn2.onclick = () => sendVote(name2);
+
+      btn1.onclick = () => vote(name1);
+      btn2.onclick = () => vote(name2);
     }
-  
-    function sendVote(name) {
-      console.log("Enviando voto por:", name);
-      fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name: name }),
-        credentials: "include" // <-- esto permite enviar cookies de Google
-      })
-      .then((res) => {
-        if (!res.ok) throw new Error("Respuesta no OK");
-        return res.text();
-      })
-      .then((text) => {
-        console.log("Respuesta del script:", text);
+
+    function vote(name) {
+      const ref = db.collection("votos").doc(name);
+      ref.get().then(doc => {
+        if (doc.exists) {
+          ref.update({ total: doc.data().total + 1 });
+        } else {
+          ref.set({ total: 1 });
+        }
+      }).then(() => {
         updateButtons();
-      })
-      .catch((err) => {
-        alert("Hubo un error al votar 😢");
-        console.error(err);
+      }).catch((error) => {
+        alert("Error al guardar el voto 😢");
+        console.error("Error al votar:", error);
       });
     }
-  
+
     updateButtons();
   </script>
+</body>
+</html>
